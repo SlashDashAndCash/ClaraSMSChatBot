@@ -2,13 +2,14 @@
 
 @base_uri = ENV["CLARA_BASE_URI"] || 'http://192.168.8.1/api'
 @data_dir = ENV["CLARA_DATA_DIR"] || 'data'
+fetch_interval = ENV["CLARA_FETCH_INTERVAL"] || 10
 
 require_relative 'libs/hilink.rb'
 require_relative 'libs/messages.rb'
 require_relative 'libs/recipients.rb'
 
 def updates_messages(messages)
-  new_messages = get_sms
+  new_messages = fetch_sms
   unless new_messages.empty?
     messages = messages.concat(new_messages).sort_by{|m| m['date']}.uniq
     write_inbox(messages)
@@ -90,6 +91,6 @@ loop do
   end
   
   delete_sms(new_messages)
-  sleep(10)
+  sleep(fetch_interval)
 end
 

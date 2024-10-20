@@ -79,7 +79,7 @@ def sms_count
 end
 
 
-def get_sms
+def fetch_sms
   uri = URI("#{@base_uri}/sms/sms-list")
 
   body =  %Q(<?xml version = "1.0" encoding = "UTF-8"?>\n)
