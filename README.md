@@ -1,6 +1,6 @@
 # Clara SMS group chat
 
-Clara is an SMS chat bot for distributing messages within a small user group. Users are managed via commands in text messages. New users must be activated by an administrator before they can text.
+Clara is a SMS chat bot for distributing messages within a small user group. Users are managed via commands in text messages. New users must be activated by an administrator before they can text.
 
 ## Prerequisites
 
@@ -49,18 +49,18 @@ If your SIM card is protected by a PIN code, enter and save it.
 ### Building the container image
 
 ```
-cd clara
+cd claraSMSGroupChat
 docker build -t localhost/clara:latest .
 ```
 
 ### Preparing the data directory
 
-The first administrator has to be entered manually in the recipients list. 
+The first administrator has to be added manually to the recipients list. 
 
 Replace +495555 with your phone number. This is **not** the number of your LTE modem.
 
 ```
-cd clara/data
+cd claraSMSGroupChat/data
 [ -f recipients.json ] || cat <<EOF >recipients.json
 {
   "+495555": {
@@ -74,7 +74,7 @@ EOF
 ### Starting the chat bot
 
 ```
-cd clara
+cd claraSMSGroupChat
 docker run --rm -it --name clara \
   -v $PWD/src:/usr/src/app \
   -v $PWD/data:/usr/src/app/data \
@@ -85,7 +85,7 @@ Exit with `Ctrl + c`
 
 ## User management
 
-A user can have one of three roles.
+Recipients can have one of three roles.
 
 * `nobody`: does not receives messages or notifications 
 * `user`: receives group messages
@@ -96,13 +96,13 @@ A user can have one of three roles.
 1. The new recipient sends a join command with their desired user name. \
 No reply is triggered to avoid DoS attacs.
 
-`#join Mark`
+   `#join Mark`
 
 2. The new recipient asks an administrator for activation. User name is required.
 
 3. The administrator sends the activation command.
 
-`#activate mark`
+   `#activate mark`
 
 A reply message is send to the administrator and the recipient. \
 The message contains the phone number of the recipient.
