@@ -1,0 +1,16 @@
+[E3372-325 RNDIS and HiLink (router) mode]
+https://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=3043&sid=54059b088d9a8d049c8558d5e9628e36
+https://blog.tanatos.org/posts/huawei_e3372h-325_brovi_with_linux/
+
+[E3372-325 Stick (AT/Serial) mode]
+https://blog.tanatos.org/posts/huawei_e3372h-325_brovi_with_linux_stickmode/
+https://www.0xf8.org/2017/01/flashing-a-huawei-e3372h-4g-lte-stick-from-hilink-to-stick-mode/
+http://blog.asiantuntijakaveri.fi/2015/07/convert-huawei-e3372h-153-from.html
+
+[Huawei HiLink LTE modem API]
+https://forum.mikrotik.com/viewtopic.php?t=166859
+https://github.com/rohan-molloy/sms-gateway/
+https://github.com/vzakharchenko/huawei-hilink/
+https://github.com/kenshaw/hilink
+https://github.com/yoratoni/huawei-router-sms-forwarding
+
