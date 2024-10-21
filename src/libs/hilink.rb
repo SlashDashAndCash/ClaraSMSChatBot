@@ -189,32 +189,30 @@ def dry_send_sms(phones, content)
 end
 
 
-def delete_sms(messages)
+def delete_sms(message)
   uri = URI("#{@base_uri}/sms/delete-sms")
 
-  messages.each do |message|
-    message_id = message['index']
-    body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-      xml.request {
-        xml.Index_ message_id
-      }
-    end
-    body = body.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
+  message_id = message['index']
+  body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+    xml.request {
+      xml.Index_ message_id
+    }
+  end
+  body = body.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
 
-    begin
-      http = Net::HTTP.new(uri.host, uri.port)
-      res = http.post(uri.path, body, get_token)
+  begin
+    http = Net::HTTP.new(uri.host, uri.port)
+    res = http.post(uri.path, body, get_token)
 
-      if res.is_a?(Net::HTTPSuccess)
-        doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
-        error_codes(doc)
-      else
-        raise SystemCallError, "Deleting sms #{message_id} failed"
-      end
-    rescue
-      sleep 2  # wait for processing previous requests
-      retry if (retries += 1) < 2
+    if res.is_a?(Net::HTTPSuccess)
+      doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
+      error_codes(doc)
+    else
+      raise SystemCallError, "Deleting sms #{message_id} failed"
     end
+  rescue
+    sleep 2  # wait for processing previous requests
+    retry if (retries += 1) < 2
   end
 end
 

@@ -88,9 +88,10 @@ loop do
     else
       bulk_message(message)
     end
+    
+    delete_sms(message)
   end
   
-  delete_sms(new_messages)
   sleep(fetch_interval)
 end
 
