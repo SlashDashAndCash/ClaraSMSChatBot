@@ -38,6 +38,9 @@ ATTRS{idVendor}=="3566", ATTRS{idProduct}=="2001", RUN+="/sbin/usb_modeswitch -v
 ATTRS{idVendor}=="3566", ATTRS{idProduct}=="2001", RUN+="/sbin/usb_modeswitch -v 3566 -p 2001 -W -R"
 
 LABEL="modeswitch_rules_end"
+
+# Necessary for network interface name
+SUBSYSTEM=="net", ACTION=="add", ATTRS{idVendor}=="3566", ATTRS{idProduct}=="2001", NAME="usb0"
 ```
 
 Insert SIM card and connect it to your computer.
@@ -64,7 +67,7 @@ cd claraSMSGroupChat/data
 [ -f recipients.json ] || cat <<EOF >recipients.json
 {
   "+495555": {
-    "name": "YourName",
+    "name": "Caren",
     "role": "admin"
   }
 }
@@ -96,13 +99,13 @@ Recipients can have one of three roles.
 1. The new recipient sends a join command with their desired user name. \
 No reply is triggered to avoid DoS attacs.
 
-   `#join Mark`
+   `#join Marc`
 
 2. The new recipient asks an administrator for activation. User name is required.
 
 3. The administrator sends the activation command.
 
-   `#activate mark`
+   `#activate marc`
 
 A reply message is send to the administrator and the recipient. \
 The message contains the phone number of the recipient.

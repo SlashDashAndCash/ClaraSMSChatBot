@@ -61,7 +61,7 @@ def bulk_message(message)
   phones = @recipients.keys.select{ |r| r != sender_phone && recipient_active?(r) }
   content = sender_name + ': ' + message['content']
 
-  if recipient_active?(sender_phone)
+  if phones.any? && recipient_active?(sender_phone)
     send_sms(phones, content[0,139])
   end
 end
