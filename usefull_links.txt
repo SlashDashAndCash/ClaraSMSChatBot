@@ -7,6 +7,9 @@ https://blog.tanatos.org/posts/huawei_e3372h-325_brovi_with_linux_stickmode/
 https://www.0xf8.org/2017/01/flashing-a-huawei-e3372h-4g-lte-stick-from-hilink-to-stick-mode/
 http://blog.asiantuntijakaveri.fi/2015/07/convert-huawei-e3372h-153-from.html
 
+[E3372-325 network device name]
+https://gist.github.com/smarek/2decaa4c29cfb907eb4c0038f62b98b8
+
 [Huawei HiLink LTE modem API]
 https://forum.mikrotik.com/viewtopic.php?t=166859
 https://github.com/rohan-molloy/sms-gateway/
