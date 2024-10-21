@@ -19,6 +19,9 @@ def puts_messages(messages, lines=10, banner=false)
   end
 end
 
+def log_message(message)
+  [message['date'], recipient_name(message['phone']), message['content']].join('; ')
+end
 
 def read_inbox
   if File.exist? @inbox_file

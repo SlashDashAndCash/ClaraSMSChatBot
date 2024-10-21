@@ -6,7 +6,7 @@ Clara is a SMS chat bot for distributing messages within a small user group. Use
 
 * Huawei HiLink capable LTE modem \
 Tested with E3372-325 software version 3.0.2.61
-* Docker or Podman installed
+* Docker or Podman (>= 4.0.0) installed
 * usb-modeswitch installed
 
 ## Installation
@@ -131,4 +131,11 @@ To re-join the group an administrator must repeat the activation command. A join
 | `CLARA_BASE_URI`       | http://192.168.8.1/api | Endpoint of HiLink Api server (your LTE modem)                            |
 | `CLARA_DATA_DIR`       | ./data                 | Location of the data directory. Should be changed if running in container |
 | `CLARA_FETCH_INTERVAL` | 10                     | Seconds to sleep between fetching and distributing SMS text messages      |
+| `CLARA_LOG_LEVEL`      | info                   | Minimum log level between debug, info, warn, error or fatal               |
+
+### Command line arguments
+
+Reboot the LTE modem and exit
+
+`ruby clara.rb reboot-modem`
 
