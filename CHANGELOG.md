@@ -12,6 +12,7 @@ straightforward as possible.
 - Environment Variables for container configuration
 
 ### Changed
+- Delete message immediately after processing
  
 ### Fixed
 - Typos in README
