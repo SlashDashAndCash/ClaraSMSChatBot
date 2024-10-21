@@ -40,7 +40,7 @@ def error_codes(doc)
   err_message = doc.xpath('//error/message').text
   
   unless code == 0
-    raise "Error: #{codes[code] || code} [#{err_message}]"
+    raise SystemCallError, "Error: #{codes[code] || code} [#{err_message}]"
   end
 end
 
@@ -58,23 +58,28 @@ def get_token
       '__RequestVerificationToken' => doc.at_xpath('//response/TokInfo').text,
     }
   else
-    raise "Get session token failed"
+    raise SystemCallError, "Get session token failed"
   end
 end
 
 
 def sms_count
-  uri = URI("#{@base_uri}/sms/sms-count")
-  params = get_token
-  uri.query = URI.encode_www_form(params)
+  begin
+    uri = URI("#{@base_uri}/sms/sms-count")
+    params = get_token
+    uri.query = URI.encode_www_form(params)
 
-  res = Net::HTTP.get_response(uri)
-  if res.is_a?(Net::HTTPSuccess)
-    doc = Nokogiri::XML(res.body)
-    error_codes(doc)
-    doc
-  else
-    raise "Get sms count failed"
+    res = Net::HTTP.get_response(uri)
+    if res.is_a?(Net::HTTPSuccess)
+      doc = Nokogiri::XML(res.body)
+      error_codes(doc)
+      doc
+    else
+      raise SystemCallError, "Get sms count failed"
+    end
+  rescue
+    sleep 4  # wait for processing previous requests
+    retry if (retries += 1) < 2
   end
 end
 
@@ -97,25 +102,30 @@ def fetch_sms
   end
   body = body.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
 
-  http = Net::HTTP.new(uri.host, uri.port)
-  res = http.post(uri.path, body, get_token)
+  begin
+    http = Net::HTTP.new(uri.host, uri.port)
+    res = http.post(uri.path, body, get_token)
 
-  if res.is_a?(Net::HTTPSuccess)
-    doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
-    error_codes(doc)
-    count = doc.xpath('//response/Count').text.to_i
-    messages = []
-    for i in count.times do
-      messages << {
-        'date'    => doc.xpath("//response/Messages/Message[#{i+1}]/Date").text,
-        'phone'   => doc.xpath("//response/Messages/Message[#{i+1}]/Phone").text,
-        'index'   => doc.xpath("//response/Messages/Message[#{i+1}]/Index").text,
-        'content' => doc.xpath("//response/Messages/Message[#{i+1}]/Content").text,
-      }
+    if res.is_a?(Net::HTTPSuccess)
+      doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
+      error_codes(doc)
+      count = doc.xpath('//response/Count').text.to_i
+      messages = []
+      for i in count.times do
+        messages << {
+          'date'    => doc.xpath("//response/Messages/Message[#{i+1}]/Date").text,
+          'phone'   => doc.xpath("//response/Messages/Message[#{i+1}]/Phone").text,
+          'index'   => doc.xpath("//response/Messages/Message[#{i+1}]/Index").text,
+          'content' => doc.xpath("//response/Messages/Message[#{i+1}]/Content").text,
+        }
+      end
+      messages
+    else
+      raise SystemCallError, "Readind sms failed"
     end
-    messages
-  else
-    raise "Readind sms failed"
+  rescue
+    sleep 4  # wait for processing previous requests
+    retry if (retries += 1) < 3
   end
 end
 
@@ -145,16 +155,22 @@ def send_sms(phones, content)
   new_message = {'date' => Time.new.strftime("%Y-%m-%d"), 'content' => content}
   unless messages.include?(new_message)
   
-    uri = URI("#{@base_uri}/sms/send-sms")
-    http = Net::HTTP.new(uri.host, uri.port)
-    res = http.post(uri.path, body, get_token)
+    begin
+      uri = URI("#{@base_uri}/sms/send-sms")
+      http = Net::HTTP.new(uri.host, uri.port)
+      res = http.post(uri.path, body, get_token)
 
-    if res.is_a?(Net::HTTPSuccess)
-      doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
-      error_codes(doc)
-    else
-      raise "Sending sms failed"
+      if res.is_a?(Net::HTTPSuccess)
+        doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
+        error_codes(doc)
+      else
+        raise SystemCallError, "Sending sms failed"
+      end
+    rescue
+      sleep 4  # wait for processing previous requests
+      retry if (retries += 1) < 3
     end
+    
     write_outbox(messages << new_message) # double sending protection
   end
 end
@@ -178,16 +194,26 @@ def delete_sms(messages)
 
   messages.each do |message|
     message_id = message['index']
-    body =  %Q(<?xml version => "1.0" encoding="UTF-8"?><request><Index>#{message_id}</Index></request>\n)
+    body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+      xml.request {
+        xml.Index_ message_id
+      }
+    end
+    body = body.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
 
-    http = Net::HTTP.new(uri.host, uri.port)
-    res = http.post(uri.path, body, get_token)
+    begin
+      http = Net::HTTP.new(uri.host, uri.port)
+      res = http.post(uri.path, body, get_token)
 
-    if res.is_a?(Net::HTTPSuccess)
-      doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
-      error_codes(doc)
-    else
-      raise "Deleting sms #{message_id} failed"
+      if res.is_a?(Net::HTTPSuccess)
+        doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
+        error_codes(doc)
+      else
+        raise SystemCallError, "Deleting sms #{message_id} failed"
+      end
+    rescue
+      sleep 2  # wait for processing previous requests
+      retry if (retries += 1) < 2
     end
   end
 end
