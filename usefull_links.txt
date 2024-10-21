@@ -11,6 +11,7 @@ http://blog.asiantuntijakaveri.fi/2015/07/convert-huawei-e3372h-153-from.html
 https://gist.github.com/smarek/2decaa4c29cfb907eb4c0038f62b98b8
 
 [Huawei HiLink LTE modem API]
+https://github.com/Salamek/huawei-lte-api
 https://forum.mikrotik.com/viewtopic.php?t=166859
 https://github.com/rohan-molloy/sms-gateway/
 https://github.com/vzakharchenko/huawei-hilink/

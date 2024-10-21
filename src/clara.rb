@@ -1,9 +1,11 @@
 #!/usr/local/bin/ruby
 
-@base_uri = ENV["CLARA_BASE_URI"] || 'http://192.168.8.1/api'
-@data_dir = ENV["CLARA_DATA_DIR"] || 'data'
+@base_uri      = ENV["CLARA_BASE_URI"]       || 'http://192.168.8.1/api'
+@data_dir      = ENV["CLARA_DATA_DIR"]       || 'data'
+@log_level     = ENV['CLARA_LOG_LEVEL']      || 'info'
 fetch_interval = ENV["CLARA_FETCH_INTERVAL"] || 10
 
+require_relative 'libs/logging.rb'
 require_relative 'libs/hilink.rb'
 require_relative 'libs/messages.rb'
 require_relative 'libs/recipients.rb'
@@ -62,20 +64,29 @@ def bulk_message(message)
   content = sender_name + ': ' + message['content']
 
   if phones.any? && recipient_active?(sender_phone)
-    send_sms(phones, content[0,139])
+    dry_send_sms(phones, content[0,139])
   end
+end
+
+
+# Handle command line arguments
+case
+when ARGV.include?('reboot-modem')
+  set_control 'REBOOT'
+  exit
 end
 
 
 read_recipients
 messages = read_inbox
-puts_messages(messages, lines=10, banner=true)
+puts_messages(messages, lines=10, banner=true); puts
 
 loop do
   messages, new_messages = updates_messages(messages)
-  puts_messages new_messages
 
   new_messages.each do |message|
+    @logger.info ('New message ' + log_message(message))
+  
     case message['content'].downcase
     when /^#join/
       join_recipient(message)

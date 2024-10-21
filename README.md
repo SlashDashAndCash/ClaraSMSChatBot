@@ -131,4 +131,11 @@ To re-join the group an administrator must repeat the activation command. A join
 | `CLARA_BASE_URI`       | http://192.168.8.1/api | Endpoint of HiLink Api server (your LTE modem)                            |
 | `CLARA_DATA_DIR`       | ./data                 | Location of the data directory. Should be changed if running in container |
 | `CLARA_FETCH_INTERVAL` | 10                     | Seconds to sleep between fetching and distributing SMS text messages      |
+| `CLARA_LOG_LEVEL`      | info                   | Minimum log level between debug, info, warn, error or fatal               |
+
+### Command line arguments
+
+To reboot the LTE modem end exit
+
+`./clara.rb reboot-modem`
 

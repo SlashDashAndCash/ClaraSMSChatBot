@@ -63,6 +63,40 @@ def get_token
 end
 
 
+def set_control(mode)
+  uri = URI("#{@base_uri}/device/control")
+  
+  control_modes = {
+    'REBOOT'    => 1,
+    'RESET'     => 2,  #Resets device into factory settings
+  }
+
+  body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+    xml.request {
+      xml.Control_ control_modes[mode]
+    }
+  end
+  body = body.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
+
+  begin
+    http = Net::HTTP.new(uri.host, uri.port)
+    res = http.post(uri.path, body, get_token)
+
+    if res.is_a?(Net::HTTPSuccess)
+      doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
+      error_codes(doc)
+      @logger.info %Q(Set control mode to #{mode})
+    else
+      raise SystemCallError, "Setting control mode to #{mode} failed"
+    end
+  rescue SystemCallError => e
+    @logger.error %Q(Failed to set control mode to #{mode} with ErrMessage #{e.message})
+    sleep 2  # wait for processing previous requests
+    retry if (retries += 1) < 2
+  end
+end
+
+
 def sms_count
   begin
     uri = URI("#{@base_uri}/sms/sms-count")
@@ -77,7 +111,8 @@ def sms_count
     else
       raise SystemCallError, "Get sms count failed"
     end
-  rescue
+  rescue SystemCallError => e
+    @logger.error %Q(Failed to get SMS count with ErrMessage #{e.message})
     sleep 4  # wait for processing previous requests
     retry if (retries += 1) < 2
   end
@@ -86,9 +121,6 @@ end
 
 def fetch_sms
   uri = URI("#{@base_uri}/sms/sms-list")
-
-  body =  %Q(<?xml version = "1.0" encoding = "UTF-8"?>\n)
-  body += %Q(<request><PageIndex>1</PageIndex><ReadCount>20</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>0</Ascending><UnreadPreferred>1</UnreadPreferred></request>\n)
   
   body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
     xml.request {
@@ -118,12 +150,14 @@ def fetch_sms
           'index'   => doc.xpath("//response/Messages/Message[#{i+1}]/Index").text,
           'content' => doc.xpath("//response/Messages/Message[#{i+1}]/Content").text,
         }
+        @logger.debug %Q(Received new message from #{messages.last['phone']} with content "#{messages.last['content']}")
       end
       messages
     else
       raise SystemCallError, "Readind sms failed"
     end
-  rescue
+  rescue SystemCallError => e
+      @logger.error %Q(Failed to fetch SMS with ErrMessage #{e.message})
     sleep 4  # wait for processing previous requests
     retry if (retries += 1) < 3
   end
@@ -166,12 +200,16 @@ def send_sms(phones, content)
       else
         raise SystemCallError, "Sending sms failed"
       end
-    rescue
+    rescue SystemCallError => e
+      @logger.error %Q(Failed to send "#{content[0,30]}" to #{phones.join(', ')} with ErrMessage #{e.message})
       sleep 4  # wait for processing previous requests
       retry if (retries += 1) < 3
     end
     
     write_outbox(messages << new_message) # double sending protection
+    @logger.debug %Q(Sent out "#{content[0,30]}" to #{phones.join(', ')})
+  else
+    @logger.warn %Q(Prevent double sending of "#{content[0,30]}" to #{phones.join(', ')})
   end
 end
 
@@ -183,8 +221,10 @@ def dry_send_sms(phones, content)
   new_message = {'date' => Time.new.strftime("%Y-%m-%d"), 'content' => content}
   unless messages.include?(new_message)
   
-    puts "Phones: #{phones.join(', ')}\n#{content}"
     write_outbox(messages << new_message) # double sending protection
+    @logger.debug %Q(DRY Sent out "#{content[0,30]}" to #{phones.join(', ')})
+  else
+    @logger.warn %Q(DRY Prevent double sending of "#{content[0,30]}" to #{phones.join(', ')})
   end
 end
 
@@ -210,7 +250,8 @@ def delete_sms(message)
     else
       raise SystemCallError, "Deleting sms #{message_id} failed"
     end
-  rescue
+  rescue SystemCallError => e
+    @logger.error %Q(Failed to delete "#{message['content'][0,20]}" from #{message['phone']} with ErrMessage #{e.message})
     sleep 2  # wait for processing previous requests
     retry if (retries += 1) < 2
   end
