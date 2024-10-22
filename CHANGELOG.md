@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+- Reduced boiler plate in hilink class
 
 ### Fixed
 
