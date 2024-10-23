@@ -7,7 +7,6 @@ end
 
 class HiLink::Request
   attr_writer :log_failure
-  attr_writer :body
   
   def initialize(base_uri, logger, uri)
     @base_uri = base_uri
@@ -64,8 +63,12 @@ class HiLink::Request
     @uri = URI(@base_uri + '/' + uri)
   end
   
-  def body_xml
-    @body.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
+  def body
+    @body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+      xml.request {
+        yield xml
+      }
+    end.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
   end
   
   def get_token
@@ -97,7 +100,7 @@ class HiLink::Request
     begin
       retries ||= 0
       http = Net::HTTP.start(@uri.host, @uri.port, :read_timeout => 20)
-      res = http.post(@uri.path, body_xml, get_token)
+      res = http.post(@uri.path, @body, get_token)
 
       if res.is_a?(Net::HTTPSuccess)
         doc = Nokogiri::XML(res.body.gsub(/\n|\t/, ''))
@@ -122,10 +125,8 @@ def set_control(mode)
 
   req = HiLink::Request.new(@base_uri, @logger, 'device/control')
   req.log_failure = %Q(Failed to set control mode to #{mode}.)
-  req.body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-    xml.request {
-      xml.Control_ control_modes[mode]
-    }
+  req.body do |xml|
+    xml.Control_ control_modes[mode]
   end
   res = req.post
   
@@ -158,15 +159,13 @@ end
 def fetch_sms
   req = HiLink::Request.new(@base_uri, @logger, 'sms/sms-list')
   req.log_failure = %Q(Failed to fetch SMS.)
-  req.body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-    xml.request {
-      xml.PageIndex_ "1"
-      xml.ReadCount_ "20"
-      xml.BoxType_ "1"
-      xml.SortType_ "0"
-      xml.Ascending_ "0"
-      xml.UnreadPreferred_ "1"
-    }
+  req.body do |xml|
+    xml.PageIndex_ "1"
+    xml.ReadCount_ "20"
+    xml.BoxType_ "1"
+    xml.SortType_ "0"
+    xml.Ascending_ "0"
+    xml.UnreadPreferred_ "1"
   end
   res = req.post
   
@@ -190,20 +189,18 @@ def send_sms(phones, content)
   
   req = HiLink::Request.new(@base_uri, @logger, 'sms/send-sms')
   req.log_failure = %Q(Failed to fetch SMS.)
-  req.body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-    xml.request {
-      xml.Index_ "-1"
-      xml.Phones {
-        phones.each do |phone|
-          xml.Phone_ phone
-        end
-      }
-      xml.Sca_
-      xml.Content_ content
-      xml.Length_ content.length
-      xml.Reserved_ "1"
-      xml.Date_ Time.new.strftime("%Y-%m-%d %H:%M:%S")
+  req.body do |xml|
+    xml.Index_ "-1"
+    xml.Phones {
+      phones.each do |phone|
+        xml.Phone_ phone
+      end
     }
+    xml.Sca_
+    xml.Content_ content
+    xml.Length_ content.length
+    xml.Reserved_ "1"
+    xml.Date_ Time.new.strftime("%Y-%m-%d %H:%M:%S")
   end
   
   # double sending protection 
@@ -213,7 +210,7 @@ def send_sms(phones, content)
     res = req.post 
     write_outbox(messages << new_message) # double sending protection
     @logger.debug %Q(Sent out "#{content[0,30]}" to #{phones.join(', ')})
-    sleep 10  # LTE modem get's busy be sending SMS
+    sleep 10  # LTE modem gets busy by sending SMS
   else
     @logger.warn %Q(Prevent double sending of "#{content[0,30]}" to #{phones.join(', ')})
   end
@@ -238,10 +235,8 @@ end
 def delete_sms(message)
   req = HiLink::Request.new(@base_uri, @logger, 'sms/delete-sms')
   req.log_failure = %Q(Failed to delete "#{message['content'][0,20]}" from #{message['phone']}.)
-  req.body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-    xml.request {
-      xml.Index_ message['index']
-    }
+  req.body do |xml|
+    xml.Index_ message['index']
   end
   res = req.post
   

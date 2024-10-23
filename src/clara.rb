@@ -95,8 +95,6 @@ begin
         activate_recipient(message)
       when /^\s*#leave/
         leave_recipient(message)
-      when /^\s*#/
-        # ignore unknown chat bot commands
       else
         bulk_message(message)
       end
