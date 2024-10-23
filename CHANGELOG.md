@@ -2,14 +2,20 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
 ## [Unreleased] - YYYY-mm-dd
 
 ### Added
 
 ### Changed
 - Reduced boiler plate in hilink class
+- Reboot LTE modem on fatal error
+- Wait 10 sec. after sending SMS
 
 ### Fixed
+- send-sms uri
+- delete-sms body
+
 
 ## [v0.2.0] - 2024-10-21
 

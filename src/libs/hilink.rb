@@ -181,7 +181,7 @@ end
 def send_sms(phones, content)
   phones.is_a?(String) && phones = [phones]
   
-  req = HiLink::Request.new(@base_uri, @logger, 'sms/sms-list')
+  req = HiLink::Request.new(@base_uri, @logger, 'sms/send-sms')
   req.log_failure = %Q(Failed to fetch SMS.)
   req.body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
     xml.request {
@@ -206,6 +206,7 @@ def send_sms(phones, content)
     res = req.post 
     write_outbox(messages << new_message) # double sending protection
     @logger.debug %Q(Sent out "#{content[0,30]}" to #{phones.join(', ')})
+    sleep 10  # LTE modem get's busy be sending SMS
   else
     @logger.warn %Q(Prevent double sending of "#{content[0,30]}" to #{phones.join(', ')})
   end
@@ -232,7 +233,7 @@ def delete_sms(message)
   req.log_failure = %Q(Failed to delete "#{message['content'][0,20]}" from #{message['phone']}.)
   req.body = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
     xml.request {
-      xml.Index_ message_id
+      xml.Index_ message['index']
     }
   end
   res = req.post

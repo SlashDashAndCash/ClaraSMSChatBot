@@ -64,7 +64,7 @@ def bulk_message(message)
   content = sender_name + ': ' + message['content']
 
   if phones.any? && recipient_active?(sender_phone)
-    dry_send_sms(phones, content[0,139])
+    send_sms(phones, content[0,139])
   end
 end
 
@@ -81,28 +81,34 @@ read_recipients
 messages = read_inbox
 puts_messages(messages, lines=10, banner=true); puts
 
-loop do
-  messages, new_messages = updates_messages(messages)
+begin
+  loop do
+    messages, new_messages = updates_messages(messages)
 
-  new_messages.each do |message|
-    @logger.info ('New message ' + log_message(message))
-  
-    case message['content'].downcase
-    when /^#join/
-      join_recipient(message)
-    when /^#activate/
-      activate_recipient(message)
-    when /^\s*#leave/
-      leave_recipient(message)
-    when /^\s*#/
-      # ignore unknown chat bot commands
-    else
-      bulk_message(message)
-    end
+    new_messages.each do |message|
+      @logger.info ('New message ' + log_message(message))
     
-    delete_sms(message)
+      case message['content'].downcase
+      when /^#join/
+        join_recipient(message)
+      when /^#activate/
+        activate_recipient(message)
+      when /^\s*#leave/
+        leave_recipient(message)
+      when /^\s*#/
+        # ignore unknown chat bot commands
+      else
+        bulk_message(message)
+      end
+      
+      delete_sms(message)
+    end
+
+    sleep(fetch_interval)
   end
-  
-  sleep(fetch_interval)
+ensure
+  @logger.fatal("Something went wrong. Rebooting LTE modem in 30 sec. and exit.")
+  sleep 30
+  set_control 'REBOOT'
 end
 
