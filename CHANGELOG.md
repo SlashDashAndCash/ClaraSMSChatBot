@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Reduced boiler plate in hilink class
 - Reboot LTE modem on fatal error
 - Wait 10 sec. after sending SMS
+- Exception handling on token request
 
 ### Fixed
 - send-sms uri

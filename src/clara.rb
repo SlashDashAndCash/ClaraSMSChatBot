@@ -106,8 +106,9 @@ begin
 
     sleep(fetch_interval)
   end
-ensure
-  @logger.fatal("Something went wrong. Rebooting LTE modem in 30 sec. and exit.")
+rescue SystemCallError => e
+  @logger.fatal("Something went wrong. ErrMessage #{e.message}")
+  @logger.warn("Rebooting LTE modem in 30 sec. and exit")
   sleep 30
   set_control 'REBOOT'
 end

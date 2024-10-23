@@ -73,17 +73,24 @@ class HiLink::Request
     params = {}
     uri.query = URI.encode_www_form(params)
 
-    res = Net::HTTP.get_response(uri)
-    if res.is_a?(Net::HTTPSuccess)
-      doc = Nokogiri::XML(res.body)
-      error_codes(doc)
-      {
-        'Cookie' => doc.at_xpath('//response/SesInfo').text,
-        '__RequestVerificationToken' => doc.at_xpath('//response/TokInfo').text,
-      }
-    else
-      raise SystemCallError, "Get session token failed"
+    begin
+      res = Net::HTTP.get_response(uri)
+      if res.is_a?(Net::HTTPSuccess)
+        doc = Nokogiri::XML(res.body)
+        error_codes(doc)
+        {
+          'Cookie' => doc.at_xpath('//response/SesInfo').text,
+          '__RequestVerificationToken' => doc.at_xpath('//response/TokInfo').text,
+        }
+      else
+        raise SystemCallError, "Get session token failed"
+      end
+    rescue SystemCallError => e
+      @logger.error "Failed to get session token. ErrMessage #{e.message}"
+      sleep 2  # wait for processing previous requests
+      retry if (retries += 1) < 2
     end
+
   end
   
   def post
