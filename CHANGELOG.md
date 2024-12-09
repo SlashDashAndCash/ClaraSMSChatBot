@@ -10,12 +10,14 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Reduced boiler plate in hilink class
 - Reboot LTE modem on fatal error
-- Wait 10 sec. after sending SMS
+- Wait 4 * recipients + 4 sec. after sending SMS
 - Exception handling on token request
+- Increased message size to 160 chars
 
 ### Fixed
 - send-sms uri
 - delete-sms body
+- immediate logging to stdout, stderr
 
 
 ## [v0.2.0] - 2024-10-21

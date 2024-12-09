@@ -8,6 +8,9 @@ LOG_LEVELS = {
   "fatal" => Logger::FATAL,
 }
 
+STDOUT.sync = true
+STDERR.sync = true
+
 @logger = Logger.new(STDOUT)
 @logger.level = LOG_LEVELS[@log_level]
 

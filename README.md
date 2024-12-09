@@ -67,7 +67,7 @@ cd claraSMSGroupChat/data
 [ -f recipients.json ] || cat <<EOF >recipients.json
 {
   "+495555": {
-    "name": "Caren",
+    "name": "Karen",
     "role": "admin"
   }
 }
@@ -80,7 +80,8 @@ EOF
 cd claraSMSGroupChat
 docker run --rm -it --name clara \
   -v $PWD/src:/usr/src/app \
-  -v $PWD/data:/usr/src/app/data \
+  -v $PWD/data:/data \
+  -e CLARA_DATA_DIR=/data \
   localhost/clara:latest
 ```
 
@@ -112,7 +113,7 @@ The message contains the phone number of the recipient.
 
 ### Sending messages to the group chat
 
-Every message not beginning with the hash sign (#) is replicated to every user and administrator except to yourself.
+Every message which is not a command (beginning with #) is replicated to every user and administrator except to the sender.
 
 ### Leaving the group chat
 
@@ -126,12 +127,12 @@ To re-join the group an administrator must repeat the activation command. A join
 
 ### Environment variables
 
-| EnvVar name            | Default value          | Description                                                               |
-|------------------------|------------------------|---------------------------------------------------------------------------|
-| `CLARA_BASE_URI`       | http://192.168.8.1/api | Endpoint of HiLink Api server (your LTE modem)                            |
-| `CLARA_DATA_DIR`       | ./data                 | Location of the data directory. Should be changed if running in container |
-| `CLARA_FETCH_INTERVAL` | 10                     | Seconds to sleep between fetching and distributing SMS text messages      |
-| `CLARA_LOG_LEVEL`      | info                   | Minimum log level between debug, info, warn, error or fatal               |
+| EnvVar name            | Default value          | Description                                                          |
+|------------------------|------------------------|----------------------------------------------------------------------|
+| `CLARA_BASE_URI`       | http://192.168.8.1/api | Endpoint of HiLink Api server (your LTE modem)                       |
+| `CLARA_DATA_DIR`       | ./data                 | Location of the data directory                                       |
+| `CLARA_FETCH_INTERVAL` | 10                     | Seconds to sleep between fetching and distributing SMS text messages |
+| `CLARA_LOG_LEVEL`      | info                   | Minimum log level between debug, info, warn, error or fatal          |
 
 ### Command line arguments
 

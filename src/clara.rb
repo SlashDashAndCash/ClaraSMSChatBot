@@ -64,7 +64,7 @@ def bulk_message(message)
   content = sender_name + ': ' + message['content']
 
   if phones.any? && recipient_active?(sender_phone)
-    send_sms(phones, content[0,139])
+    send_sms(phones, content[0,159])
   end
 end
 

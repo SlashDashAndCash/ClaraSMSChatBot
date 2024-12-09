@@ -210,7 +210,7 @@ def send_sms(phones, content)
     res = req.post 
     write_outbox(messages << new_message) # double sending protection
     @logger.debug %Q(Sent out "#{content[0,30]}" to #{phones.join(', ')})
-    sleep 10  # LTE modem gets busy by sending SMS
+    sleep 4 * phones.count + 4  # LTE modem gets busy during sending
   else
     @logger.warn %Q(Prevent double sending of "#{content[0,30]}" to #{phones.join(', ')})
   end
